@@ -13,5 +13,7 @@ class Transformer(nn.Module):
 
     def forward(self, x):
         x, encoder_keys, encoder_values = self.encoder(x)
+        # TODO add while loop for decoder side
+        # TODO figure out how to return single token per batch in decoder
         x = self.decoder(x, encoder_keys, encoder_values)
         return x
