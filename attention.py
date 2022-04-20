@@ -15,7 +15,7 @@ class MultiheadedAttentionIterative(nn.Module):
         self.masked = masked
 
         self.query_weights = torch.rand(size=(self.heads_number, self.embedding_dim, self.key_dim))
-        # TODO maybe (self.embedding_dim, self.key_dim * self.heads_number)
+
         self.key_weights = torch.rand(size=(self.heads_number, self.embedding_dim, self.key_dim))
         self.value_weights = torch.rand(size=(self.heads_number, self.embedding_dim, self.key_dim))
         self.output_weights = torch.rand(
@@ -63,6 +63,7 @@ class MultiheadedAttention(nn.Module):
         self.heads_number = heads_number
         self.masked = masked
 
+        # TODO how to initialize weights
         self.query_weights = torch.rand(size=(self.embedding_dim, self.key_dim * self.heads_number))
         self.output_weights = torch.rand(
             size=(self.key_dim * self.heads_number, self.embedding_dim))

@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 from attention import MultiheadedSelfAttention, MultiheadedAttention
@@ -39,12 +40,28 @@ class DecoderBlock(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, blocks_number: int) -> None:
+    def __init__(self,
+                 vocabulary_size: int,
+                 blocks_number: int = 8,
+                 key_dim: int = 64,
+                 embedding_dim: int = 512,
+                 heads_number: int = 8,
+                 hidden_dim: int = 2048,
+                 layer_norm_gain: int = 1) -> None:
         self.blocks_number = blocks_number
-        self.decoder_blocks = [DecoderBlock()
+        self.decoder_blocks = [DecoderBlock(key_dim=key_dim,
+                                            embedding_dim =embedding_dim,
+                                            heads_number=heads_number,
+                                            hidden_dim=hidden_dim,
+                                            layer_norm_gain=layer_norm_gain)
                                for _ in range(self.blocks_number)]
+        self.output_weights = torch.rand(size=(embedding_dim, vocabulary_size))
 
     def forward(self, x, encoder_keys, encoder_values):
         for block_id in range(self.blocks_number):
             x = self.decoder_blocks[block_id](x, encoder_keys, encoder_values)
-        return x
+
+        output_logits = torch.matmul(x, self.output_weights)
+        tokens_probs = torch.softmax(output_logits, dim=-1)
+        tokens_ids = torch.argmax(tokens_probs, dim=-1)
+        return tokens_ids
