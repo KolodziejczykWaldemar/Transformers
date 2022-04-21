@@ -20,7 +20,7 @@ class TestMultiheadedAttention(TestCase):
                                         [2, 1, 4]]))
         embeddings = self.embeddings(tokens)
 
-        attention_values, _, _ = self.model(embeddings)
+        attention_values = self.model(embeddings)
         self.assertEqual(embeddings.shape, attention_values.shape)
 
     def test_repetitive_results(self) -> None:
@@ -28,7 +28,7 @@ class TestMultiheadedAttention(TestCase):
         tokens = torch.tensor(np.array([document_ids, document_ids]))
         embeddings = self.embeddings(tokens)
 
-        attention_values, _, _ = self.model(embeddings)
+        attention_values = self.model(embeddings)
         attention_values = attention_values.detach().numpy()
         attention_values_first_document = attention_values[0, :, :]
         attention_values_second_document = attention_values[1, :, :]
@@ -39,7 +39,7 @@ class TestMultiheadedAttention(TestCase):
         tokens = torch.tensor(np.array([0, 2, 3]))
         embeddings = self.embeddings(tokens)
 
-        attention_values, _, _ = self.model(embeddings)
+        attention_values = self.model(embeddings)
         self.assertEqual(embeddings.shape, attention_values.shape)
 
     def test_masked(self):
@@ -49,7 +49,7 @@ class TestMultiheadedAttention(TestCase):
         embeddings = self.embeddings(tokens)
 
         self.model.masked = True
-        attention_values, _, _ = self.model(embeddings)
+        attention_values = self.model(embeddings)
         # TODO add test
 
         # dnn = PositionWiseDenseNetwork(embedding_dim=20).forward(attention_values)

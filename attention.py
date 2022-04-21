@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-class MultiheadedAttentionIterative(nn.Module):
+class MultiheadedAttentionOldIterative(nn.Module):
     def __init__(self,
                  key_dim: int = 64,
                  embedding_dim: int = 512,
@@ -134,4 +134,4 @@ class MultiheadedSelfAttention(MultiheadedAttention):
         values = torch.transpose(values, dim0=1, dim1=2)
 
         outputs = super().forward(x, keys, values)
-        return outputs, keys, values
+        return outputs

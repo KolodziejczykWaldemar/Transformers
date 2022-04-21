@@ -29,9 +29,15 @@ class DecoderBlock(nn.Module):
 
         self.layer_norm_2 = LayerNorm(gain=layer_norm_gain)
 
-    def forward(self, x, encoder_keys, encoder_values):
+    def forward(self, x, encoder_outputs):
         self_attention_representations, _, __ = self.multiheaded_masked_self_attention(x)
         x = self.layer_norm_0(x + self_attention_representations)
+        # TODO create encoder_keys_weights and encoder_values_weights
+        # encoder_keys = torch.matmul(encoder_outputs, encoder_keys_weights)
+        # encoder_values = torch.matmul(encoder_outputs, encoder_values_weights)
+        encoder_keys = None
+        encoder_values = None
+
         attention_representations, _, __ = self.multiheaded_attention(x, encoder_keys, encoder_values)
         x = self.layer_norm(x + attention_representations)
         position_wise_values = self.position_wise_dense(x)
@@ -57,9 +63,9 @@ class Decoder(nn.Module):
                                for _ in range(self.blocks_number)]
         self.output_weights = torch.rand(size=(embedding_dim, vocabulary_size))
 
-    def forward(self, x, encoder_keys, encoder_values):
+    def forward(self, x, encoder_outputs):
         for block_id in range(self.blocks_number):
-            x = self.decoder_blocks[block_id](x, encoder_keys, encoder_values)
+            x = self.decoder_blocks[block_id](x, encoder_outputs)
 
         output_logits = torch.matmul(x, self.output_weights)
         tokens_probs = torch.softmax(output_logits, dim=-1)
