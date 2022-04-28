@@ -1,8 +1,17 @@
+from enum import Enum
+
 import torch
 import torch.nn as nn
 
 from decoder import Decoder
 from encoder import Encoder
+
+
+class SpecialToken(Enum):
+    PAD_WORD = '<BLK>'
+    UNK_WORD = '<UNK>'
+    SOS_WORD = '<S>'
+    EOS_WORD = '</S>'
 
 
 class Transformer(nn.Module):
@@ -14,6 +23,8 @@ class Transformer(nn.Module):
         self.decoder = Decoder()
 
     def forward(self, inputs):
+        # TODO pass padding
+        # TODO distinguish between training and inference
         encoded_inputs = self.encoder(inputs)
         decoded_output = self.decoder(inputs, encoded_inputs)
         return decoded_output
