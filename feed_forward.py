@@ -13,6 +13,9 @@ class PositionWiseDenseNetwork(nn.Module):
         self.inner_biases = torch.rand(size=(self.hidden_dim,))
         self.outer_biases = torch.rand(size=(self.embedding_dim,))
 
+        nn.init.xavier_uniform_(self.inner_weights)
+        nn.init.xavier_uniform_(self.outer_weights)
+
     def forward(self, x):
         x = torch.matmul(x, self.inner_weights)
         x = x + self.inner_biases
