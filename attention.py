@@ -1,3 +1,5 @@
+from typing import Optional
+
 import torch
 import torch.nn as nn
 
@@ -6,7 +8,11 @@ class ScaledDotProductAttention(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, queries, keys, values, mask = None):
+    def forward(self,
+                queries: torch.Tensor,
+                keys: torch.Tensor,
+                values: torch.Tensor,
+                mask: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
         queries.shape = (batch_size, tokens_in_documents, heads_number, key_dim)
         mask.shape = (batch_size, heads_number, queries_number, keys_number)
@@ -49,7 +55,11 @@ class MultiheadedAttention(nn.Module):
         nn.init.xavier_uniform_(self.output_weights)
         self.attention = ScaledDotProductAttention()
 
-    def forward(self, inputs, keys, values, mask):
+    def forward(self,
+                inputs: torch.Tensor,
+                keys: torch.Tensor,
+                values: torch.Tensor,
+                mask: torch.Tensor) -> torch.Tensor:
         """
         inputs.shape = (batch_size, tokens_in_documents, embedding_dim)
         keys.shape = values.shape = (batch_size, tokens_in_documents, heads_number, key_dim)
@@ -91,7 +101,10 @@ class MultiheadedSelfAttention(MultiheadedAttention):
         nn.init.xavier_uniform_(self.key_weights)
         nn.init.xavier_uniform_(self.value_weights)
 
-    def forward(self, inputs, padding_mask):
+    def forward(self,
+                inputs: torch.Tensor,
+                padding_mask: torch.Tensor) -> torch.Tensor:
+        # TODO unify signature with MultiheadedAttention
         """
         inputs.shape = (?batch_size, tokens_in_documents, embedding_dim)
         padding_mask.shape = (batch_size, tokens_in_documents)

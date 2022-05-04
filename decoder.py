@@ -38,7 +38,11 @@ class DecoderBlock(nn.Module):
         nn.init.xavier_uniform_(self.encoder_keys_weights)
         nn.init.xavier_uniform_(self.encoder_values_weights)
 
-    def forward(self, x, encoder_outputs, encoder_padding_mask, decoder_padding_mask):
+    def forward(self,
+                x: torch.Tensor,
+                encoder_outputs: torch.Tensor,
+                encoder_padding_mask: torch.Tensor,
+                decoder_padding_mask: torch.Tensor) -> torch.Tensor:
         batch_size = x.shape[0]
 
         self_attention_representations = self.decoder_self_attention(x, decoder_padding_mask)
@@ -81,7 +85,11 @@ class Decoder(nn.Module):
         self.output_weights = nn.Parameter(torch.rand(size=(embedding_dim, vocabulary_size)))
         nn.init.xavier_uniform_(self.output_weights)
 
-    def forward(self, x, encoder_outputs, encoder_padding_mask, decoder_padding_mask):
+    def forward(self,
+                x: torch.Tensor,
+                encoder_outputs: torch.Tensor,
+                encoder_padding_mask: torch.Tensor,
+                decoder_padding_mask: torch.Tensor) -> torch.Tensor:
         for block_id in range(self.blocks_number):
             x = self.decoder_blocks[block_id](x, encoder_outputs, encoder_padding_mask, decoder_padding_mask)
 

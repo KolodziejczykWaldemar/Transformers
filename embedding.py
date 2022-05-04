@@ -22,12 +22,14 @@ class TransformerEmbedding(nn.Embedding):
         embeddings = semantic_embeddings + positional_embeddings
         return embeddings
 
-    def _get_angles(self, token_positions, embedding_dims):
+    def _get_angles(self,
+                    token_positions: np.ndarray,
+                    embedding_dims: np.ndarray) -> np.ndarray:
         angle_rates = 1 / np.power(10000,
                                    (2 * (embedding_dims // 2)) / np.float32(self.embedding_dim))
         return token_positions * angle_rates
 
-    def _get_positional_encoding(self, tokens_in_document: int):
+    def _get_positional_encoding(self, tokens_in_document: int) -> torch.Tensor:
 
         angle_rads = self._get_angles(np.arange(tokens_in_document)[:, np.newaxis],
                                       np.arange(self.embedding_dim)[np.newaxis, :])

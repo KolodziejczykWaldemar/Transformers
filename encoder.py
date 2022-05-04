@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 from attention import MultiheadedSelfAttention
@@ -21,7 +22,7 @@ class EncoderBlock(nn.Module):
 
         self.layer_norm = LayerNorm(gain=layer_norm_gain)
 
-    def forward(self, x, padding_mask):
+    def forward(self, x: torch.Tensor, padding_mask: torch.Tensor) -> torch.Tensor:
         attention_representations = self.self_attention(x, padding_mask)
         x = self.layer_norm(x + attention_representations)
         position_wise_values = self.position_wise_dense(x)
@@ -46,7 +47,7 @@ class Encoder(nn.Module):
                                             layer_norm_gain=layer_norm_gain)
                                for _ in range(self.blocks_number)]
 
-    def forward(self, x, padding_mask):
+    def forward(self, x: torch.Tensor, padding_mask: torch.Tensor) -> torch.Tensor:
         for block_id in range(self.blocks_number):
             x = self.encoder_blocks[block_id](x, padding_mask)
         return x

@@ -17,7 +17,7 @@ class PositionWiseDenseNetwork(nn.Module):
         nn.init.xavier_uniform_(self.inner_weights)
         nn.init.xavier_uniform_(self.outer_weights)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = torch.matmul(x, self.inner_weights)
         x = x + self.inner_biases
         x = torch.relu(x)
@@ -35,7 +35,7 @@ class LayerNorm(nn.Module):
         super().__init__()
         self.gain = gain
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         means = torch.unsqueeze(torch.mean(x, -1), 2)
         stds = torch.unsqueeze(torch.std(x, -1), 2)
         x = (x - means) * self.gain / stds

@@ -54,7 +54,9 @@ class Transformer(nn.Module):
                                hidden_dim=hidden_dim,
                                layer_norm_gain=layer_norm_gain)
 
-    def forward(self, encoder_inputs, decoder_inputs):
+    def forward(self,
+                encoder_inputs: torch.Tensor,
+                decoder_inputs: torch.Tensor) -> torch.Tensor:
 
         enc_padding_mask = self._get_padding_mask(encoder_inputs, self.enc_pad_token_id)
         dec_padding_mask = self._get_padding_mask(decoder_inputs, self.dec_pad_token_id)
@@ -70,7 +72,7 @@ class Transformer(nn.Module):
                                       dec_padding_mask)
         return decoded_output
 
-    def predict_autoregressive(self, inputs):
+    def predict_autoregressive(self, inputs: torch.Tensor) -> torch.Tensor:
         encoded_inputs = self.encoder(inputs)
 
         # TODO change the list below to batched tensor
@@ -83,7 +85,7 @@ class Transformer(nn.Module):
             decoded_output.append(current_decoded_token_id)
         return decoded_output
 
-    def _get_padding_mask(self, documents, pad_token_id):
+    def _get_padding_mask(self, documents: torch.Tensor, pad_token_id: int) -> torch.Tensor:
         """
         documents.shape = (batch_size, tokens_in_documents)
         """
