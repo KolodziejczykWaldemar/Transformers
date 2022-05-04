@@ -33,8 +33,8 @@ class DecoderBlock(nn.Module):
 
         self.layer_norm_2 = LayerNorm(gain=layer_norm_gain)
 
-        self.encoder_keys_weights = torch.rand(size=(self.embedding_dim, self.key_dim * self.heads_number))
-        self.encoder_values_weights = torch.rand(size=(self.embedding_dim, self.key_dim * self.heads_number))
+        self.encoder_keys_weights = nn.Parameter(torch.rand(size=(self.embedding_dim, self.key_dim * self.heads_number)))
+        self.encoder_values_weights = nn.Parameter(torch.rand(size=(self.embedding_dim, self.key_dim * self.heads_number)))
         nn.init.xavier_uniform_(self.encoder_keys_weights)
         nn.init.xavier_uniform_(self.encoder_values_weights)
 
@@ -78,7 +78,7 @@ class Decoder(nn.Module):
                                             hidden_dim=hidden_dim,
                                             layer_norm_gain=layer_norm_gain)
                                for _ in range(self.blocks_number)]
-        self.output_weights = torch.rand(size=(embedding_dim, vocabulary_size))
+        self.output_weights = nn.Parameter(torch.rand(size=(embedding_dim, vocabulary_size)))
         nn.init.xavier_uniform_(self.output_weights)
 
     def forward(self, x, encoder_outputs, encoder_padding_mask, decoder_padding_mask):
@@ -86,6 +86,6 @@ class Decoder(nn.Module):
             x = self.decoder_blocks[block_id](x, encoder_outputs, encoder_padding_mask, decoder_padding_mask)
 
         output_logits = torch.matmul(x, self.output_weights)
-        tokens_probs = torch.softmax(output_logits, dim=-1)
-        tokens_ids = torch.argmax(tokens_probs, dim=-1)
-        return tokens_ids
+        # we don't apply softmax since loss function does it inplace
+        # tokens_probs = torch.softmax(output_logits, dim=-1)
+        return output_logits

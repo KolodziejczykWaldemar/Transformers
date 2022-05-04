@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.nn import Parameter
 
 
 class PositionWiseDenseNetwork(nn.Module):
@@ -8,10 +9,10 @@ class PositionWiseDenseNetwork(nn.Module):
         self.hidden_dim = hidden_dim
         self.embedding_dim = embedding_dim
 
-        self.inner_weights = torch.rand(size=(self.embedding_dim, self.hidden_dim))
-        self.outer_weights = torch.rand(size=(self.hidden_dim, self.embedding_dim))
-        self.inner_biases = torch.rand(size=(self.hidden_dim,))
-        self.outer_biases = torch.rand(size=(self.embedding_dim,))
+        self.inner_weights = Parameter(torch.rand(size=(self.embedding_dim, self.hidden_dim)))
+        self.outer_weights = Parameter(torch.rand(size=(self.hidden_dim, self.embedding_dim)))
+        self.inner_biases = Parameter(torch.rand(size=(self.hidden_dim,)))
+        self.outer_biases = Parameter(torch.rand(size=(self.embedding_dim,)))
 
         nn.init.xavier_uniform_(self.inner_weights)
         nn.init.xavier_uniform_(self.outer_weights)
