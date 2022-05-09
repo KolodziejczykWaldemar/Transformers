@@ -25,11 +25,10 @@ class Transformer(nn.Module):
                  enc_vocab_size: int,
                  dec_vocab_size: int,
                  embedding_dim: int = 512,
-                 blocks_number: int = 8,
+                 blocks_number: int = 6,
                  key_dim: int = 64,
                  heads_number: int = 8,
-                 hidden_dim: int = 2048,
-                 layer_norm_gain: int = 1):
+                 hidden_dim: int = 2048):
         super().__init__()
         self.enc_sos_token_id = enc_sos_token_id
         self.enc_pad_token_id = enc_pad_token_id
@@ -42,8 +41,7 @@ class Transformer(nn.Module):
                                embedding_dim=embedding_dim,
                                heads_number=heads_number,
                                hidden_dim=hidden_dim,
-                               blocks_number=blocks_number,
-                               layer_norm_gain=layer_norm_gain)
+                               blocks_number=blocks_number)
 
         self.dec_embeddings = TransformerEmbedding(dec_vocab_size, embedding_dim)
         self.decoder = Decoder(vocabulary_size=dec_vocab_size,
@@ -51,8 +49,7 @@ class Transformer(nn.Module):
                                key_dim=key_dim,
                                embedding_dim=embedding_dim,
                                heads_number=heads_number,
-                               hidden_dim=hidden_dim,
-                               layer_norm_gain=layer_norm_gain)
+                               hidden_dim=hidden_dim)
 
     def forward(self,
                 encoder_inputs: torch.Tensor,

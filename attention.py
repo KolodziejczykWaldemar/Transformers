@@ -49,31 +49,35 @@ class MultiheadedAttention(nn.Module):
         self.embedding_dim = embedding_dim
         self.heads_number = heads_number
 
-        self.query_weights = nn.Parameter(torch.rand(size=(self.embedding_dim, self.key_dim * self.heads_number)))
-        nn.init.xavier_uniform_(self.query_weights)
-        self.output_weights = nn.Parameter(torch.rand(size=(self.key_dim * self.heads_number, self.embedding_dim)))
-        nn.init.xavier_uniform_(self.output_weights)
+        self.query_projection = nn.Linear(self.embedding_dim, self.key_dim * self.heads_number, bias=False)
+        self.key_projection = nn.Linear(self.embedding_dim, self.key_dim * self.heads_number, bias=False)
+        self.value_projection = nn.Linear(self.embedding_dim, self.key_dim * self.heads_number, bias=False)
+
+        self.output_projection = nn.Linear(self.key_dim * self.heads_number, self.embedding_dim, bias=False)
+
         self.attention = ScaledDotProductAttention()
 
     def forward(self,
-                inputs: torch.Tensor,
+                queries: torch.Tensor,
                 keys: torch.Tensor,
                 values: torch.Tensor,
                 mask: torch.Tensor) -> torch.Tensor:
         """
-        inputs.shape = (batch_size, tokens_in_documents, embedding_dim)
+        queries.shape = (batch_size, tokens_in_documents, embedding_dim)
         keys.shape = values.shape = (batch_size, tokens_in_documents, heads_number, key_dim)
         mask.shape = (batch_size, heads_number, queries_number, keys_number)
         """
-        if len(inputs.shape) == 2:
-            inputs = torch.unsqueeze(inputs, dim=0)
-        batch_size = inputs.shape[0]
+        batch_size = queries.shape[0]
 
         # shape: batch_size, tokens_in_documents, heads_number * key_dim
-        queries = torch.matmul(inputs, self.query_weights)
+        queries = self.query_projection(queries)
+        keys = self.key_projection(keys)
+        values = self.value_projection(values)
 
         # shape: batch_size, tokens_in_documents, heads_number, key_dim
         queries = queries.view(batch_size, -1, self.heads_number, self.key_dim)
+        keys = keys.view(batch_size, -1, self.heads_number, self.key_dim)
+        values = values.view(batch_size, -1, self.heads_number, self.key_dim)
 
         # shape: batch_size, tokens_in_documents, heads_number, key_dim
         attention_heads = self.attention(queries, keys, values, mask=mask)
@@ -82,54 +86,5 @@ class MultiheadedAttention(nn.Module):
         attention_heads = attention_heads.contiguous().view(batch_size, -1, self.heads_number * self.key_dim)
 
         # shape: batch_size, tokens_in_documents, embedding_dim
-        output = torch.matmul(attention_heads, self.output_weights)
+        output = self.output_projection(attention_heads)
         return output
-
-
-class MultiheadedSelfAttention(MultiheadedAttention):
-    def __init__(self,
-                 key_dim: int = 64,
-                 embedding_dim: int = 512,
-                 heads_number: int = 8,
-                 is_decoder_layer: bool = False):
-        super().__init__(key_dim=key_dim,
-                         embedding_dim=embedding_dim,
-                         heads_number=heads_number)
-        self.is_decoder_layer = is_decoder_layer
-        self.key_weights = nn.Parameter(torch.rand(size=(self.embedding_dim, self.key_dim * self.heads_number)))
-        self.value_weights = nn.Parameter(torch.rand(size=(self.embedding_dim, self.key_dim * self.heads_number)))
-        nn.init.xavier_uniform_(self.key_weights)
-        nn.init.xavier_uniform_(self.value_weights)
-
-    def forward(self,
-                inputs: torch.Tensor,
-                padding_mask: torch.Tensor) -> torch.Tensor:
-        # TODO unify signature with MultiheadedAttention
-        """
-        inputs.shape = (?batch_size, tokens_in_documents, embedding_dim)
-        padding_mask.shape = (batch_size, tokens_in_documents)
-        """
-        if len(inputs.shape) == 2:
-            inputs = inputs.unsqueeze(dim=0)
-        batch_size = inputs.shape[0]
-        tokens_in_document = inputs.shape[1]
-
-        # shape: batch_size, tokens_in_documents, heads_number * key_dim
-        keys = torch.matmul(inputs, self.key_weights)
-        values = torch.matmul(inputs, self.value_weights)
-
-        # shape: batch_size, tokens_in_documents, heads_number, key_dim
-        keys = keys.view(batch_size, -1, self.heads_number, self.key_dim)
-        values = values.view(batch_size, -1, self.heads_number, self.key_dim)
-
-        mask = padding_mask.unsqueeze(dim=1).unsqueeze(dim=2)
-        if self.is_decoder_layer:
-            subsequent_mask = torch.ones((tokens_in_document, tokens_in_document), dtype=torch.bool)
-            subsequent_mask = torch.triu(subsequent_mask, diagonal=1)
-            subsequent_mask = subsequent_mask.unsqueeze(dim=0).unsqueeze(dim=1)
-            mask = mask | subsequent_mask
-
-        # shape: batch_size, tokens_in_documents, embedding_dim
-        outputs = super().forward(inputs, keys, values, mask)
-        return outputs
-

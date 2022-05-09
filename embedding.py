@@ -8,6 +8,7 @@ class TransformerEmbedding(nn.Embedding):
                  vocabulary_size: int,
                  embedding_dim: int = 512):
         super().__init__(vocabulary_size, embedding_dim)
+        self.drop_out = nn.Dropout(p=0.1)
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         if len(input.shape) == 1:
@@ -20,6 +21,7 @@ class TransformerEmbedding(nn.Embedding):
         semantic_embeddings = super().forward(input)
         positional_embeddings = self._get_positional_encoding(tokens_in_document=tokens_in_document)
         embeddings = semantic_embeddings + positional_embeddings
+        embeddings = self.drop_out(embeddings)
         return embeddings
 
     def _get_angles(self,
@@ -42,4 +44,4 @@ class TransformerEmbedding(nn.Embedding):
 
         pos_encoding = angle_rads[np.newaxis, ...]
 
-        return torch.tensor(pos_encoding, dtype=torch.float32)
+        return nn.Parameter(torch.tensor(pos_encoding, dtype=torch.float32), requires_grad=False)
