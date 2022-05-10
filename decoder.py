@@ -89,8 +89,8 @@ class Decoder(nn.Module):
     def forward(self,
                 x: torch.Tensor,
                 encoder_outputs: torch.Tensor,
-                encoder_padding_mask: torch.Tensor,
-                decoder_padding_mask: torch.Tensor) -> torch.Tensor:
+                decoder_padding_mask: torch.Tensor,
+                encoder_padding_mask: torch.Tensor) -> torch.Tensor:
         for decoder_block in self.decoder_blocks:
             x = decoder_block(x, encoder_outputs, encoder_padding_mask, decoder_padding_mask)
 

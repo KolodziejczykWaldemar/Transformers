@@ -65,22 +65,40 @@ class Transformer(nn.Module):
                                        enc_padding_mask)
         decoded_output = self.decoder(dec_inputs_emb,
                                       encoder_outputs,
-                                      enc_padding_mask,
-                                      dec_padding_mask)
+                                      dec_padding_mask,
+                                      enc_padding_mask)
         return decoded_output
 
-    def predict_autoregressive(self, inputs: torch.Tensor) -> torch.Tensor:
-        encoded_inputs = self.encoder(inputs)
+    def predict_autoregressive(self, inputs: torch.Tensor, max_len: int = 500) -> torch.Tensor:
+        batch_size = inputs.shape[0]
 
-        # TODO change the list below to batched tensor
-        decoded_output = [self.sos_token_id]
-        current_decoded_token_id = None
+        enc_padding_mask = self._get_padding_mask(inputs, self.enc_pad_token_id)
+        enc_inputs_emb = self.enc_embeddings(inputs)
 
-        # TODO change this condition to many sequences in batch - maybe masking...?
-        while current_decoded_token_id is not self.eos_token_id:
-            current_decoded_token_id = self.decoder(decoded_output, encoded_inputs)[-1]
-            decoded_output.append(current_decoded_token_id)
-        return decoded_output
+        encoder_outputs = self.encoder(enc_inputs_emb,
+                                       enc_padding_mask)
+
+        decoder_inputs = torch.ones(size=(batch_size, 1), dtype=torch.long) * self.dec_sos_token_id
+
+        ended_samples = torch.zeros(batch_size).bool()
+        for _ in range(max_len):
+
+            dec_inputs_emb = self.dec_embeddings(decoder_inputs)
+            dec_padding_mask = self._get_padding_mask(decoder_inputs, self.dec_pad_token_id)
+
+            current_decoded = self.decoder(dec_inputs_emb,
+                                           encoder_outputs,
+                                           dec_padding_mask,
+                                           enc_padding_mask)
+            current_decoded_token_ids = torch.argmax(current_decoded[:, -1, :], dim=-1)
+            decoder_inputs = torch.cat((decoder_inputs, current_decoded_token_ids.unsqueeze(1)), dim=1)
+
+            ended_samples[current_decoded_token_ids == self.dec_eos_token_id] = True
+
+            if ended_samples.all():
+                break
+
+        return decoder_inputs
 
     def _get_padding_mask(self, documents: torch.Tensor, pad_token_id: int) -> torch.Tensor:
         """
