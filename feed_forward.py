@@ -3,7 +3,6 @@ import torch.nn as nn
 
 
 class PositionWiseDenseNetwork(nn.Module):
-
     def __init__(self, hidden_dim: int = 2048, embedding_dim: int = 512, dropout_prob: float = 0.1):
         super(PositionWiseDenseNetwork, self).__init__()
         self.inner_linear = nn.Linear(embedding_dim, hidden_dim, bias=True)

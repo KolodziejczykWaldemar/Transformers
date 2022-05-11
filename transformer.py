@@ -8,16 +8,8 @@ from embedding import TransformerEmbedding
 from encoder import Encoder
 
 
-class SpecialToken(Enum):
-    PAD_WORD = '<BLK>'
-    UNK_WORD = '<UNK>'
-    SOS_WORD = '<S>'
-    EOS_WORD = '</S>'
-
-
 class Transformer(nn.Module):
     def __init__(self,
-                 enc_sos_token_id: int,
                  enc_pad_token_id: int,
                  dec_sos_token_id: int,
                  dec_pad_token_id: int,
@@ -28,20 +20,25 @@ class Transformer(nn.Module):
                  blocks_number: int = 6,
                  key_dim: int = 64,
                  heads_number: int = 8,
-                 hidden_dim: int = 2048):
+                 hidden_dim: int = 2048,
+                 dropout_prob: float = 0.1,
+                 max_doc_len: int = 256):
         super().__init__()
-        self.enc_sos_token_id = enc_sos_token_id
         self.enc_pad_token_id = enc_pad_token_id
         self.dec_sos_token_id = dec_sos_token_id
         self.dec_pad_token_id = dec_pad_token_id
         self.dec_eos_token_id = dec_eos_token_id
 
-        self.enc_embeddings = TransformerEmbedding(enc_vocab_size, embedding_dim)
+        self.enc_embeddings = TransformerEmbedding(vocabulary_size=enc_vocab_size,
+                                                   embedding_dim=embedding_dim,
+                                                   max_doc_len=max_doc_len,
+                                                   dropout_prob=dropout_prob)
         self.encoder = Encoder(key_dim=key_dim,
                                embedding_dim=embedding_dim,
                                heads_number=heads_number,
                                hidden_dim=hidden_dim,
-                               blocks_number=blocks_number)
+                               blocks_number=blocks_number,
+                               dropout_prob=dropout_prob)
 
         self.dec_embeddings = TransformerEmbedding(dec_vocab_size, embedding_dim)
         self.decoder = Decoder(vocabulary_size=dec_vocab_size,
@@ -49,7 +46,14 @@ class Transformer(nn.Module):
                                key_dim=key_dim,
                                embedding_dim=embedding_dim,
                                heads_number=heads_number,
-                               hidden_dim=hidden_dim)
+                               hidden_dim=hidden_dim,
+                               dropout_prob=dropout_prob)
+
+    def initialize_weights(self):
+        def _initialize_kaiming_uniform(module: nn.Module) -> None:
+            if hasattr(module, 'weight') and module.weight.dim() > 1:
+                nn.init.kaiming_uniform(module.weight.data)
+        self.apply(_initialize_kaiming_uniform)
 
     def forward(self,
                 encoder_inputs: torch.Tensor,
